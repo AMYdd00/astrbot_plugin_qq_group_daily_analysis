@@ -11,13 +11,11 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         :root {
-            /* 星野主题配色 */
             --bg-page: #f8f1f4;
             --hoshino-pink: #f7a8b8;
             --hoshino-pink-light: #fbe0e6;
             --hoshino-blue: #a3c1da;
             --hoshino-blue-light: #e6eff5;
-            --hoshino-yellow: #fcd581;
             
             --text-main: #4a4a4a;
             --text-sub: #7a7a7a;
@@ -47,7 +45,7 @@
             background-image: 
                 radial-gradient(circle at 10% 20%, rgba(247, 168, 184, 0.05) 0%, transparent 40%),
                 radial-gradient(circle at 90% 80%, rgba(163, 193, 218, 0.08) 0%, transparent 40%),
-                url("file:///H:/cache/hoshino%20meme/8DBD8DA9B64F615B640B1BADF1360C8B.jpg"); /* 背景大图叠加 */
+                url("file:///H:/cache/hoshino%20meme/8DBD8DA9B64F615B640B1BADF1360C8B.jpg");
             background-size: cover;
             background-position: center;
             background-blend-mode: overlay;
@@ -60,12 +58,13 @@
         }
 
         /* 
-         * 核心：固定宽高比容器 (16:9近似)
-         * 让内容在容器内绝对定位或使用 Grid 划分
+         * 去掉固定的高度，让宽度固定在 1200px。
+         * 通过使用两列（或多列）布局把本来竖着排列的内容横向展开。
+         * 这样生成的内容天然就会把高度压缩在 900px~1000px 左右，呈现出近似 4:3 或 1.2:1 的绝佳比例！
          */
         .bento-wrapper {
-            width: 1200px; /* 固定宽度，配合无头浏览器截图 */
-            height: 675px; /* 16:9 比例 */
+            width: 1200px; 
+            min-height: 800px;
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
@@ -73,9 +72,11 @@
             border: 2px solid rgba(255, 255, 255, 0.8);
             box-shadow: var(--shadow-lg);
             padding: 30px;
+            
+            /* 使用 CSS Grid 来合理分配区域 */
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr 1fr;
-            grid-template-rows: auto 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-auto-rows: auto;
             gap: 20px;
             position: relative;
             overflow: hidden;
@@ -95,14 +96,14 @@
             letter-spacing: -5px;
         }
 
-        /* 标题区 - 占据左上部分 */
+        /* 标题区 - 占据头部全部 3 列 */
         .bento-header {
             grid-column: 1 / 4;
-            grid-row: 1 / 2;
             display: flex;
             align-items: center;
             gap: 20px;
             z-index: 1;
+            padding-bottom: 10px;
         }
 
         .header-avatar {
@@ -114,6 +115,7 @@
             background-image: url("file:///H:/cache/hoshino%20meme/00073E2BAA063BB134A6E72ED3913391.jpg");
             background-size: cover;
             background-position: center;
+            flex-shrink: 0;
         }
 
         .header-info h1 {
@@ -134,16 +136,22 @@
             display: inline-block;
         }
 
-        /* 数据统计小卡片 */
+        /* 基础数据区：占据左边 1 列 */
         .stat-group {
-            grid-column: 4 / 5;
-            grid-row: 1 / 3;
+            grid-column: 1 / 2;
             display: flex;
             flex-direction: column;
             gap: 15px;
             z-index: 1;
         }
 
+        /* 图表和群质量区：占据右边 2 列 */
+        .content-main {
+            grid-column: 2 / 4;
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        /* 通用卡片样式 */
         .bento-card {
             background: rgba(255, 255, 255, 0.9);
             border-radius: var(--radius-lg);
@@ -153,18 +161,17 @@
             display: flex;
             flex-direction: column;
             position: relative;
-            overflow: hidden;
             z-index: 1;
-            transition: transform 0.3s ease;
+            height: 100%;
         }
 
         .stat-card {
             padding: 15px;
-            flex: 1;
             display: flex;
             align-items: center;
             justify-content: space-between;
             background: linear-gradient(135deg, #fff, var(--hoshino-pink-light));
+            flex: none; /* 防止被拉伸 */
         }
 
         .stat-card:nth-child(even) {
@@ -199,51 +206,38 @@
             font-weight: bold;
         }
 
-        /* 核心内容区1：活跃度/质量分析 */
-        .content-main {
+        /* 
+         * 动态内容区排版
+         * 将话题、金句、头衔排在下面，采用多列并排 
+         */
+        
+        /* 话题 - 占1.5列（视觉上的跨列控制） */
+        .content-topic {
             grid-column: 1 / 3;
-            grid-row: 2 / 4;
-            background: rgba(255, 255, 255, 0.95);
+            background: linear-gradient(to bottom right, rgba(255,255,255,0.95), rgba(251, 224, 230, 0.5));
         }
 
-        /* 核心内容区2：话题/头衔/语录 */
-        .content-side {
+        /* 金句 - 占剩下的列 */
+        .content-quote {
             grid-column: 3 / 4;
-            grid-row: 2 / 4;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            background: transparent;
-            box-shadow: none;
-            border: none;
-            padding: 0;
+            background: linear-gradient(to bottom right, rgba(255,255,255,0.95), rgba(230, 239, 245, 0.5));
         }
 
-        .content-side .bento-card {
-            flex: 1;
+        /* 如果有头衔，新开一行并排 */
+        .content-title {
+            grid-column: 1 / 3;
+            background: linear-gradient(to bottom right, rgba(255,255,255,0.95), rgba(252, 213, 129, 0.15));
         }
 
-        .card-title {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 1.2rem;
-            font-weight: 800;
-            color: var(--accent);
-            margin-bottom: 15px;
-            border-bottom: 2px dashed var(--hoshino-pink-light);
-            padding-bottom: 8px;
-        }
-
-        /* 右下角大图/签名区 */
+        /* 装饰图 - 如果有头衔的话放头衔旁边 */
         .image-card {
-            grid-column: 4 / 5;
-            grid-row: 3 / 4;
+            grid-column: 3 / 4;
             padding: 0;
             background-image: url("file:///H:/cache/hoshino%20meme/13F1AD3ACC8BD554892B2EB9ABEA6ECC.jpg");
             background-size: cover;
             background-position: center;
             border: 3px solid #fff;
+            min-height: 250px;
         }
 
         .image-card::after {
@@ -261,24 +255,16 @@
             color: var(--accent);
         }
 
-        /* 自定义滚动条和内容限制，防止溢出破坏布局 */
-        .scrollable-content {
-            flex: 1;
-            overflow-y: auto;
-            overflow-x: hidden;
-            padding-right: 5px;
-        }
-
-        .scrollable-content::-webkit-scrollbar {
-            width: 6px;
-        }
-        .scrollable-content::-webkit-scrollbar-track {
-            background: rgba(0,0,0,0.02);
-            border-radius: 10px;
-        }
-        .scrollable-content::-webkit-scrollbar-thumb {
-            background: var(--hoshino-pink-light);
-            border-radius: 10px;
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--accent);
+            margin-bottom: 15px;
+            border-bottom: 2px dashed var(--hoshino-pink-light);
+            padding-bottom: 8px;
         }
 
         /* 调整引入的 HTML 样式以适应卡片 */
@@ -288,28 +274,20 @@
             list-style: none;
         }
 
-        /* 图表样式重写，使其缩小 */
-        .chart-container {
+        /* 强制覆盖子组件带来的固定宽度问题，保证子组件自适应容器 */
+        .html-slot > * {
+            max-width: 100% !important;
             width: 100% !important;
-            height: 200px !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            box-shadow: none !important;
-            background: transparent !important;
-            border: none !important;
         }
 
         .footer {
-            position: absolute;
-            bottom: 15px;
-            left: 30px;
+            grid-column: 1 / 4;
+            text-align: center;
             font-size: 0.8rem;
             color: var(--text-sub);
-            z-index: 10;
-            background: rgba(255,255,255,0.7);
-            padding: 4px 10px;
-            border-radius: 12px;
-            backdrop-filter: blur(4px);
+            padding: 10px;
+            border-top: 1px dashed rgba(247, 168, 184, 0.3);
+            margin-top: 10px;
         }
     </style>
 </head>
@@ -326,7 +304,7 @@
             </div>
         </div>
 
-        <!-- 基础数据统计 -->
+        <!-- 基础数据统计 (左侧) -->
         <div class="stat-group">
             <div class="bento-card stat-card">
                 <div class="stat-icon"><i data-lucide="message-square"></i></div>
@@ -358,48 +336,52 @@
             </div>
         </div>
 
-        <!-- 主要分析内容 (图表+质量评估) -->
-        <div class="bento-card content-main">
+        <!-- 图表与质量评估 (右侧跨两列) -->
+        <div class="bento-card content-main html-slot">
             <div class="card-title">
                 <i data-lucide="activity"></i> 群聊活跃度 & 质量
             </div>
-            <div class="scrollable-content">
-                {{hourly_chart_html | safe}}
-                
-                {% if chat_quality_html %}
-                <div style="margin-top: 20px;">
-                    {{ chat_quality_html | safe }}
-                </div>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- 侧边内容 (话题+语录) -->
-        <div class="content-side">
-            <div class="bento-card" style="background: linear-gradient(to bottom right, rgba(255,255,255,0.95), rgba(251, 224, 230, 0.5));">
-                <div class="card-title">
-                    <i data-lucide="message-circle"></i> 今日热门话题
-                </div>
-                <div class="scrollable-content">
-                    {{topics_html | safe}}
-                </div>
-            </div>
+            {{hourly_chart_html | safe}}
             
-            <div class="bento-card" style="background: linear-gradient(to bottom right, rgba(255,255,255,0.95), rgba(230, 239, 245, 0.5));">
-                <div class="card-title">
-                    <i data-lucide="quote"></i> 群友锐评 & 圣经
-                </div>
-                <div class="scrollable-content">
-                    {{quotes_html | safe}}
-                    {% if not quotes_html %}
-                    {{titles_html | safe}}
-                    {% endif %}
-                </div>
+            {% if chat_quality_html %}
+            <div style="margin-top: 20px;">
+                {{ chat_quality_html | safe }}
             </div>
+            {% endif %}
         </div>
 
-        <!-- 表情包配图区 -->
-        <div class="bento-card image-card"></div>
+        <!-- 话题 (左侧跨两列) -->
+        {% if topics_html %}
+        <div class="bento-card content-topic html-slot">
+            <div class="card-title">
+                <i data-lucide="message-circle"></i> 今日热门话题
+            </div>
+            {{topics_html | safe}}
+        </div>
+        {% endif %}
+        
+        <!-- 金句 (右侧一列) -->
+        {% if quotes_html %}
+        <div class="bento-card content-quote html-slot" {% if not topics_html %}style="grid-column: 1 / 4;"{% endif %}>
+            <div class="card-title">
+                <i data-lucide="quote"></i> 群友锐评 & 圣经
+            </div>
+            {{quotes_html | safe}}
+        </div>
+        {% endif %}
+
+        <!-- 头衔 (左侧跨两列) -->
+        {% if titles_html %}
+        <div class="bento-card content-title html-slot">
+            <div class="card-title">
+                <i data-lucide="award"></i> 群友画像
+            </div>
+            {{titles_html | safe}}
+        </div>
+        {% endif %}
+
+        <!-- 表情包配图区 (填补右下角空缺) -->
+        <div class="bento-card image-card" {% if not titles_html %}style="grid-column: 1 / 4; grid-row: auto; min-height: 200px;"{% endif %}></div>
 
         <div class="footer">
             Generated by AstrBot | SXP-Simon/astrbot_plugin_qq_group_daily_analysis | Tokens: {{total_tokens}}
