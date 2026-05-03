@@ -1,69 +1,413 @@
-﻿<!DOCTYPE html>
+﻿{% import "inline_assets.html" as inline_assets %}
+<!DOCTYPE html>
 <html lang="{{ 'zh-CN' if t2i_font_source == 'Mainland' else 'zh-Hant' }}">
-
 <head>
     <meta charset="UTF-8">
-    <title>Simple Report</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>群聊日常分析 · 星野版</title>
     <link rel="preconnect" href="{{ t2i_google_fonts_mirror }}">
     <link rel="preconnect" href="{{ t2i_gstatic_mirror }}" crossorigin>
-    <link href="{{ t2i_google_fonts_mirror }}/css2?family=Noto+Sans+TC:wght@400;700&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
+    <link href="{{ t2i_google_fonts_mirror }}/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
+        :root {
+            /* 星野主题配色 */
+            --bg-page: #f8f1f4;
+            --hoshino-pink: #f7a8b8;
+            --hoshino-pink-light: #fbe0e6;
+            --hoshino-blue: #a3c1da;
+            --hoshino-blue-light: #e6eff5;
+            --hoshino-yellow: #fcd581;
+            
+            --text-main: #4a4a4a;
+            --text-sub: #7a7a7a;
+            --accent: #d87c8c;
+            
+            --radius-lg: 24px;
+            --radius-md: 16px;
+            --radius-sm: 10px;
+            
+            --shadow-sm: 0 4px 15px rgba(247, 168, 184, 0.15);
+            --shadow-md: 0 10px 30px rgba(247, 168, 184, 0.2);
+            --shadow-lg: 0 20px 40px rgba(247, 168, 184, 0.3);
+            
+            --font-main: {% if t2i_font_source == 'Mainland' %}'Noto Sans SC', 'Noto Sans TC'{% else %}'Noto Sans TC', 'Noto Sans SC'{% endif %}, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: {% if t2i_font_source == 'Mainland' %}'Noto Sans SC', 'Noto Sans TC'{% else %}'Noto Sans TC', 'Noto Sans SC'{% endif %}, sans-serif;
+            font-family: var(--font-main);
+            color: var(--text-main);
+            background-color: var(--bg-page);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(247, 168, 184, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(163, 193, 218, 0.08) 0%, transparent 40%),
+                url("file:///H:/cache/hoshino%20meme/8DBD8DA9B64F615B640B1BADF1360C8B.jpg"); /* 背景大图叠加 */
+            background-size: cover;
+            background-position: center;
+            background-blend-mode: overlay;
+            background-attachment: fixed;
+            padding: 30px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 
+         * 核心：固定宽高比容器 (16:9近似)
+         * 让内容在容器内绝对定位或使用 Grid 划分
+         */
+        .bento-wrapper {
+            width: 1200px; /* 固定宽度，配合无头浏览器截图 */
+            height: 675px; /* 16:9 比例 */
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 36px;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            box-shadow: var(--shadow-lg);
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            grid-template-rows: auto 1fr 1fr;
+            gap: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 水印与装饰 */
+        .deco-text {
+            position: absolute;
+            font-size: 180px;
+            font-weight: 900;
+            color: rgba(247, 168, 184, 0.06);
+            bottom: -40px;
+            right: -20px;
+            z-index: 0;
+            pointer-events: none;
+            line-height: 1;
+            letter-spacing: -5px;
+        }
+
+        /* 标题区 - 占据左上部分 */
+        .bento-header {
+            grid-column: 1 / 4;
+            grid-row: 1 / 2;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            z-index: 1;
+        }
+
+        .header-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 4px solid #fff;
+            box-shadow: var(--shadow-sm);
+            background-image: url("file:///H:/cache/hoshino%20meme/00073E2BAA063BB134A6E72ED3913391.jpg");
+            background-size: cover;
+            background-position: center;
+        }
+
+        .header-info h1 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--accent);
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 0px rgba(255,255,255,0.8);
+        }
+
+        .header-info p {
+            font-size: 1.1rem;
+            color: var(--text-sub);
+            font-weight: 500;
+            background: rgba(255,255,255,0.6);
+            padding: 4px 12px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        /* 数据统计小卡片 */
+        .stat-group {
+            grid-column: 4 / 5;
+            grid-row: 1 / 3;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 1;
+        }
+
+        .bento-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: var(--radius-lg);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: var(--shadow-sm);
             padding: 20px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            transition: transform 0.3s ease;
         }
 
-        .section {
-            margin-bottom: 20px;
-            border: 1px solid #ccc;
-            padding: 10px;
+        .stat-card {
+            padding: 15px;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg, #fff, var(--hoshino-pink-light));
         }
 
-        h1,
-        h2 {
-            color: #333;
+        .stat-card:nth-child(even) {
+            background: linear-gradient(135deg, #fff, var(--hoshino-blue-light));
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+        }
+
+        .stat-info {
+            text-align: right;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: var(--text-main);
+            line-height: 1.1;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            font-weight: bold;
+        }
+
+        /* 核心内容区1：活跃度/质量分析 */
+        .content-main {
+            grid-column: 1 / 3;
+            grid-row: 2 / 4;
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        /* 核心内容区2：话题/头衔/语录 */
+        .content-side {
+            grid-column: 3 / 4;
+            grid-row: 2 / 4;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            background: transparent;
+            box-shadow: none;
+            border: none;
+            padding: 0;
+        }
+
+        .content-side .bento-card {
+            flex: 1;
+        }
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--accent);
+            margin-bottom: 15px;
+            border-bottom: 2px dashed var(--hoshino-pink-light);
+            padding-bottom: 8px;
+        }
+
+        /* 右下角大图/签名区 */
+        .image-card {
+            grid-column: 4 / 5;
+            grid-row: 3 / 4;
+            padding: 0;
+            background-image: url("file:///H:/cache/hoshino%20meme/13F1AD3ACC8BD554892B2EB9ABEA6ECC.jpg");
+            background-size: cover;
+            background-position: center;
+            border: 3px solid #fff;
+        }
+
+        .image-card::after {
+            content: "大叔我啊，今天也很努力哦~";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(5px);
+            padding: 8px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            text-align: center;
+            color: var(--accent);
+        }
+
+        /* 自定义滚动条和内容限制，防止溢出破坏布局 */
+        .scrollable-content {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 5px;
+        }
+
+        .scrollable-content::-webkit-scrollbar {
+            width: 6px;
+        }
+        .scrollable-content::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.02);
+            border-radius: 10px;
+        }
+        .scrollable-content::-webkit-scrollbar-thumb {
+            background: var(--hoshino-pink-light);
+            border-radius: 10px;
+        }
+
+        /* 调整引入的 HTML 样式以适应卡片 */
+        .topic-list, .quote-list, .title-list {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        /* 图表样式重写，使其缩小 */
+        .chart-container {
+            width: 100% !important;
+            height: 200px !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            box-shadow: none !important;
+            background: transparent !important;
+            border: none !important;
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 15px;
+            left: 30px;
+            font-size: 0.8rem;
+            color: var(--text-sub);
+            z-index: 10;
+            background: rgba(255,255,255,0.7);
+            padding: 4px 10px;
+            border-radius: 12px;
+            backdrop-filter: blur(4px);
         }
     </style>
 </head>
-
 <body>
-    <h1>群聊日报 - {{current_date}}</h1>
+    <div class="bento-wrapper">
+        <div class="deco-text">HOSHINO</div>
+        
+        <!-- 头部 -->
+        <div class="bento-header">
+            <div class="header-avatar"></div>
+            <div class="header-info">
+                <h1>群聊日常分析记录</h1>
+                <p><i data-lucide="calendar" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i>{{current_date}} | 最嗨时段: {{most_active_period}}</p>
+            </div>
+        </div>
 
-    <div class="section">
-        <h2>基础统计</h2>
-        <p>消息数: {{message_count}}</p>
-        <p>参与人数: {{participant_count}}</p>
-        <p>总字符数: {{total_characters}}</p>
-        <p>表情数: {{emoji_count}}</p>
-        <p>最活跃时段: {{most_active_period}}</p>
+        <!-- 基础数据统计 -->
+        <div class="stat-group">
+            <div class="bento-card stat-card">
+                <div class="stat-icon"><i data-lucide="message-square"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">{{message_count}}</div>
+                    <div class="stat-label">今日消息数</div>
+                </div>
+            </div>
+            <div class="bento-card stat-card">
+                <div class="stat-icon"><i data-lucide="users"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">{{participant_count}}</div>
+                    <div class="stat-label">活跃群友</div>
+                </div>
+            </div>
+            <div class="bento-card stat-card">
+                <div class="stat-icon"><i data-lucide="smile"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">{{emoji_count}}</div>
+                    <div class="stat-label">表情包出击</div>
+                </div>
+            </div>
+            <div class="bento-card stat-card">
+                <div class="stat-icon"><i data-lucide="hash"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">{{total_characters}}</div>
+                    <div class="stat-label">总字数累计</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主要分析内容 (图表+质量评估) -->
+        <div class="bento-card content-main">
+            <div class="card-title">
+                <i data-lucide="activity"></i> 群聊活跃度 & 质量
+            </div>
+            <div class="scrollable-content">
+                {{hourly_chart_html | safe}}
+                
+                {% if chat_quality_html %}
+                <div style="margin-top: 20px;">
+                    {{ chat_quality_html | safe }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 侧边内容 (话题+语录) -->
+        <div class="content-side">
+            <div class="bento-card" style="background: linear-gradient(to bottom right, rgba(255,255,255,0.95), rgba(251, 224, 230, 0.5));">
+                <div class="card-title">
+                    <i data-lucide="message-circle"></i> 今日热门话题
+                </div>
+                <div class="scrollable-content">
+                    {{topics_html | safe}}
+                </div>
+            </div>
+            
+            <div class="bento-card" style="background: linear-gradient(to bottom right, rgba(255,255,255,0.95), rgba(230, 239, 245, 0.5));">
+                <div class="card-title">
+                    <i data-lucide="quote"></i> 群友锐评 & 圣经
+                </div>
+                <div class="scrollable-content">
+                    {{quotes_html | safe}}
+                    {% if not quotes_html %}
+                    {{titles_html | safe}}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 表情包配图区 -->
+        <div class="bento-card image-card"></div>
+
+        <div class="footer">
+            Generated by AstrBot | SXP-Simon/astrbot_plugin_qq_group_daily_analysis | Tokens: {{total_tokens}}
+        </div>
     </div>
 
-    <div class="section">
-        <h2>活跃度图表</h2>
-        {{hourly_chart_html | safe}}
-    </div>
- 
-    {% if chat_quality_html %}
-    <div class="section">
-        <h2>群聊质量分析</h2>
-        {{ chat_quality_html | safe }}
-    </div>
-    {% endif %}
- 
-    {{topics_html | safe}}
- 
-    {{titles_html | safe}}
- 
-    {{quotes_html | safe}}
-
-    <div class="footer" style="margin-top: 30px; padding: 15px; border-top: 1px solid #ccc; color: #666; font-size: 0.85em; text-align: center; line-height: 1.8;">
-        Generated by AstrBot | {{current_datetime}}<br>
-        SXP-Simon/astrbot_plugin_qq_group_daily_analysis<br>
-        <span style="opacity: 0.7;">Token Usage: {{total_tokens}} (Prompt: {{prompt_tokens}}, Completion: {{completion_tokens}})</span>
-    </div>
+    <script>
+        lucide.createIcons();
+    </script>
 </body>
-
 </html>
-
-
-
